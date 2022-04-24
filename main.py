@@ -1,77 +1,47 @@
-class Rectangle:
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
+import copy
+import random
+from collections import Counter
+
+class Hat:
+    def __init__(self, **kwargs):
+        self.contents = [
+            value
+            for value in
+            Counter(kwargs).elements()
+        ]
     
-    def set_width(self, width):
-        self.width = width
-    
-    def set_height(self, height):
-        self.height = height
-    
-    def get_area(self):
-        return self.width * self.height
-    
-    def get_perimeter(self):
-        return self.width * 2 + self.height * 2
-    
-    def get_diagonal(self):
-        return (self.width ** 2 + self.height ** 2) ** 0.5
-    
-    def get_picture(self):
-        full_picture = ''
-        for vertical in range(self.width):
-            full_picture += "*" * self.height
-            full_picture += "\n"
+    def draw(self, num_of_balls):
+        removed = []
+        if num_of_balls > len(self.contents):
+            return self.contents
         
-        return full_picture
-    
-    def get_amount_inside(self, object):
-        area = self.get_area()
-        object_area = object.get_area()
+        for removal_step in range(num_of_balls):
+            removed_ball = self.contents.pop(int(random.random() * len(self.contents)))
+            removed.append(removed_ball)
+        
+        return removed
 
-        num_of_input = area // object_area
-        return num_of_input
-    
-    def __str__(self):
-        return "Rectangle(width=" + str(self.width) + ", height=" + str(self.height) + ")"
+def experiment(hat, expected_balls, num_balls_drawn, num_experiments):
+    count = 0
+    for experiment in range(num_experiments):
+        expected_copy = copy.deepcopy(expected_balls)
+        hat_copy = copy.deepcopy(hat)
+        balls_drawn = hat_copy.draw(num_balls_drawn)
+        
+        for color in balls_drawn:
+            if color in expected_copy:
+                expected_copy[color] -= 1
 
-class Square(Rectangle):
-    def __init__(self, length):
-        self.width = length
-        self.height = length
+        if(all(x <= 0 for x in expected_copy.values())):
+            count += 1
+    return count / num_experiments
 
-    def _side_changes(self, length):
-        self.width = length
-        self.height = length
-
-    def set_side(self, length):
-        self._side_changes(length)
-    
-    def set_width(self, length):
-        self._side_changes(length)
-    
-    def set_height(self, height):
-        self._side_changes(length)
-
-    def __str__(self):
-        return "Square(side=" + str(self.width) + ")"
-
-
-rect = Rectangle(5, 10)
-print(rect.get_area())
-rect.set_width(3)
-print(rect.get_perimeter())
-print(rect)
-print(rect.get_picture())
-
-sq = Square(9)
-print(sq.get_area())
-sq.set_side(4)
-print(sq.get_diagonal())
-print(sq)
-print(sq.get_picture())
-
-rect.set_height(8)
-rect.set_width(16)
-print(rect.get_amount_inside(sq))
+random.seed(95)
+hat = Hat(blue=4, red=2, green=6)
+probability = experiment(
+    hat=hat,
+    expected_balls={"blue": 2,
+                    "red": 1},
+    num_balls_drawn=4,
+    num_experiments=3000)
+print("Probability:", probability)
